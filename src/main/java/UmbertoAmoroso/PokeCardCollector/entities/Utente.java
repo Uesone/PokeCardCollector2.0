@@ -1,5 +1,6 @@
 package UmbertoAmoroso.PokeCardCollector.entities;
 
+import UmbertoAmoroso.PokeCardCollector.enums.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -25,6 +26,9 @@ public class Utente {
 
     @Column(nullable = false)
     private String password;
+
+    @Enumerated(EnumType.STRING)
+    private Role role = Role.USER;
 
     @OneToMany(mappedBy = "utente", cascade = CascadeType.ALL)
     private List<Collezione> collezioni;
