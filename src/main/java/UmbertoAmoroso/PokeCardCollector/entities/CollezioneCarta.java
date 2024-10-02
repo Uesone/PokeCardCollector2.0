@@ -6,28 +6,29 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
 import java.util.UUID;
 
+@Entity
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
-@Entity
-public class Utente {
+@NoArgsConstructor
+
+public class CollezioneCarta {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @Column(nullable = false, unique = true)
-    private String email;
+    @ManyToOne
+    @JoinColumn(name = "collezione_id", nullable = false)
+    private Collezione collezione;
 
-    @Column(nullable = false)
-    private String password;
+    private String apiId; //  API esterne
 
-    @OneToMany(mappedBy = "utente", cascade = CascadeType.ALL)
-    private List<Collezione> collezioni;
+    private int quantity;
+    private boolean foil;
+    private String condition;
 
 
 }
