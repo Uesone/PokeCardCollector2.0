@@ -20,15 +20,10 @@ public class CollezioneCarta {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
+    @Column(nullable = false)
+    private String apiId;  // L'ID della carta da Pokémon TCG API
+
     @ManyToOne
-    @JoinColumn(name = "collezione_id", nullable = false)
+    @JoinColumn(name = "collezione_id")
     private Collezione collezione;
-
-    private String apiId; //  API esterne
-
-    private int quantity;
-    private boolean foil;
-    private String condition;
-
-
 }

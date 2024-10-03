@@ -16,6 +16,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 
+
 public class Collezione {
 
     @Id
@@ -25,11 +26,11 @@ public class Collezione {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false)
+    @Column()
     private String description;
 
     @ManyToOne
-    @JoinColumn(name = "utente_id", nullable = false)
+    @JoinColumn(name = "utente_id")
     private Utente utente;
 
     @OneToMany(mappedBy = "collezione", cascade = CascadeType.ALL)

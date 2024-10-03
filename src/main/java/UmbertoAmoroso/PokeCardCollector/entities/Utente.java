@@ -15,6 +15,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+
 public class Utente {
 
     @Id
@@ -28,10 +29,11 @@ public class Utente {
     private String password;
 
     @Enumerated(EnumType.STRING)
-    private Role role = Role.USER;
+    private Role role;
 
     @OneToMany(mappedBy = "utente", cascade = CascadeType.ALL)
     private List<Collezione> collezioni;
 
 
 }
+

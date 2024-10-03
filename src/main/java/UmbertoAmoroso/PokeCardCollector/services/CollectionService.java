@@ -1,15 +1,25 @@
 package UmbertoAmoroso.PokeCardCollector.services;
 
 import UmbertoAmoroso.PokeCardCollector.dto.NewCollectionDTO;
+import UmbertoAmoroso.PokeCardCollector.dto.PokemonCardDTO;
 import UmbertoAmoroso.PokeCardCollector.entities.Collezione;
+import UmbertoAmoroso.PokeCardCollector.entities.CollezioneCarta;
 import UmbertoAmoroso.PokeCardCollector.entities.Utente;
+import UmbertoAmoroso.PokeCardCollector.repositories.CollezioneCartaRepository;
 import UmbertoAmoroso.PokeCardCollector.repositories.CollezioneRepository;
-import UmbertoAmoroso.PokeCardCollector.repositories.UtenteRepository;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 
 @Service
 public class CollectionService {
@@ -17,57 +27,83 @@ public class CollectionService {
     @Autowired
     private CollezioneRepository collezioneRepository;
 
-    // Salva una nuova collezione per l'utente autenticato
+    @Autowired
+    private CollezioneCartaRepository collezioneCartaRepository;
+
+    @Autowired
+    private PokemonCardService pokemonCardService;
+
+    // Crea una nuova collezione per l'utente autenticato
     public Collezione save(NewCollectionDTO body, Utente utente) {
-        Collezione newCollection = new Collezione();
-        newCollection.setName(body.name());
-        newCollection.setDescription(body.description());
-        newCollection.setUtente(utente);
-        return collezioneRepository.save(newCollection);
+        Collezione collezione = new Collezione();
+        collezione.setName(body.name());  // Accedi ai campi del record
+        collezione.setDescription(body.description());
+        collezione.setUtente(utente);
+        return collezioneRepository.save(collezione);
     }
 
-    // Recupera tutte le collezioni dell'utente
+    // Restituisce tutte le collezioni dell'utente
     public List<Collezione> getCollectionsByUser(UUID utenteId) {
         return collezioneRepository.findByUtenteId(utenteId);
     }
 
-    // Aggiorna una collezione esistente
-    public Collezione updateCollection(UUID collectionId, NewCollectionDTO body, Utente utente) {
+    // Aggiungi una carta a una collezione tramite l'API di Pokémon TCG
+    public CollezioneCarta addCardToCollection(UUID collectionId, String cardId, Utente utente) {
         Collezione collection = collezioneRepository.findById(collectionId)
                 .orElseThrow(() -> new RuntimeException("Collezione non trovata"));
 
         if (!collection.getUtente().getId().equals(utente.getId())) {
+            throw new RuntimeException("Non autorizzato");
+        }
+
+        PokemonCardDTO card = pokemonCardService.getCardById(cardId);
+
+        CollezioneCarta collezioneCarta = new CollezioneCarta();
+        collezioneCarta.setApiId(card.getId());
+        collezioneCarta.setCollezione(collection);
+
+        return collezioneCartaRepository.save(collezioneCarta);
+    }
+
+    // Aggiorna una collezione esistente
+    public Collezione updateCollection(UUID collectionId, NewCollectionDTO body, Utente utente) {
+        Collezione collezione = collezioneRepository.findById(collectionId)
+                .orElseThrow(() -> new RuntimeException("Collezione non trovata"));
+
+        if (!collezione.getUtente().getId().equals(utente.getId())) {
             throw new RuntimeException("Non sei autorizzato a modificare questa collezione");
         }
 
-        collection.setName(body.name());
-        collection.setDescription(body.description());
-        return collezioneRepository.save(collection);
+        collezione.setName(body.name());
+        collezione.setDescription(body.description());
+        return collezioneRepository.save(collezione);
     }
 
-    // Cancella una collezione esistente
+    // Cancella una collezione per l'utente autenticato
     public void deleteCollection(UUID collectionId, Utente utente) {
-        Collezione collection = collezioneRepository.findById(collectionId)
+        Collezione collezione = collezioneRepository.findById(collectionId)
                 .orElseThrow(() -> new RuntimeException("Collezione non trovata"));
 
-        if (!collection.getUtente().getId().equals(utente.getId())) {
-            throw new RuntimeException("Non sei autorizzato a eliminare questa collezione");
+        if (!collezione.getUtente().getId().equals(utente.getId())) {
+            throw new RuntimeException("Non sei autorizzato a cancellare questa collezione");
         }
 
-        collezioneRepository.delete(collection);
+        collezioneRepository.delete(collezione);
     }
 
-    // Metodo backoffice per visualizzare tutte le collezioni (solo per admin)
+    // Restituisce tutte le collezioni del sistema (solo per admin)
     public List<Collezione> getAllCollections() {
         return collezioneRepository.findAll();
     }
 
-    // Metodo backoffice per eliminare una collezione come admin
+    // Cancella una collezione come admin
     public void deleteCollectionAsAdmin(UUID collectionId) {
-        Collezione collection = collezioneRepository.findById(collectionId)
+        Collezione collezione = collezioneRepository.findById(collectionId)
                 .orElseThrow(() -> new RuntimeException("Collezione non trovata"));
-        collezioneRepository.delete(collection);
+        collezioneRepository.delete(collezione);
     }
 }
+
+
 
 
