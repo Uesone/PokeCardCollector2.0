@@ -17,11 +17,8 @@ public class CollectionService {
     @Autowired
     private CollezioneRepository collezioneRepository;
 
-    @Autowired
-    private UtenteRepository utenteRepository;
-
-    public Collezione save(NewCollectionDTO body, UUID utenteId) {
-        Utente utente = utenteRepository.findById(utenteId).orElseThrow(() -> new RuntimeException("Utente non trovato"));
+    // Salva una nuova collezione per l'utente autenticato
+    public Collezione save(NewCollectionDTO body, Utente utente) {
         Collezione newCollection = new Collezione();
         newCollection.setName(body.name());
         newCollection.setDescription(body.description());
@@ -29,7 +26,48 @@ public class CollectionService {
         return collezioneRepository.save(newCollection);
     }
 
-    public List<Collezione> getCollections(UUID utenteId) {
+    // Recupera tutte le collezioni dell'utente
+    public List<Collezione> getCollectionsByUser(UUID utenteId) {
         return collezioneRepository.findByUtenteId(utenteId);
     }
+
+    // Aggiorna una collezione esistente
+    public Collezione updateCollection(UUID collectionId, NewCollectionDTO body, Utente utente) {
+        Collezione collection = collezioneRepository.findById(collectionId)
+                .orElseThrow(() -> new RuntimeException("Collezione non trovata"));
+
+        if (!collection.getUtente().getId().equals(utente.getId())) {
+            throw new RuntimeException("Non sei autorizzato a modificare questa collezione");
+        }
+
+        collection.setName(body.name());
+        collection.setDescription(body.description());
+        return collezioneRepository.save(collection);
+    }
+
+    // Cancella una collezione esistente
+    public void deleteCollection(UUID collectionId, Utente utente) {
+        Collezione collection = collezioneRepository.findById(collectionId)
+                .orElseThrow(() -> new RuntimeException("Collezione non trovata"));
+
+        if (!collection.getUtente().getId().equals(utente.getId())) {
+            throw new RuntimeException("Non sei autorizzato a eliminare questa collezione");
+        }
+
+        collezioneRepository.delete(collection);
+    }
+
+    // Metodo backoffice per visualizzare tutte le collezioni (solo per admin)
+    public List<Collezione> getAllCollections() {
+        return collezioneRepository.findAll();
+    }
+
+    // Metodo backoffice per eliminare una collezione come admin
+    public void deleteCollectionAsAdmin(UUID collectionId) {
+        Collezione collection = collezioneRepository.findById(collectionId)
+                .orElseThrow(() -> new RuntimeException("Collezione non trovata"));
+        collezioneRepository.delete(collection);
+    }
 }
+
+
