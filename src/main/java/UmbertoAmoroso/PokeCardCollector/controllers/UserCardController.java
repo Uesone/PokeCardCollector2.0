@@ -1,5 +1,6 @@
 package UmbertoAmoroso.PokeCardCollector.controllers;
 
+import UmbertoAmoroso.PokeCardCollector.dto.NewCardDTO;
 import UmbertoAmoroso.PokeCardCollector.dto.PokemonCardDTO;
 import UmbertoAmoroso.PokeCardCollector.entities.Utente;
 import UmbertoAmoroso.PokeCardCollector.services.CollectionService;
@@ -26,16 +27,26 @@ public class UserCardController {
     @Autowired
     private UserService userService;
 
+    // Ricerca carte per nome
     @GetMapping("/search")
     public List<PokemonCardDTO> searchCardsByName(@RequestParam String name) {
         return pokemonCardService.searchCardsByName(name);
     }
 
+    // Aggiungi una carta a una collezione
     @PostMapping("/collections/{collectionId}/add")
     public ResponseEntity<?> addCardToCollection(@PathVariable UUID collectionId,
                                                  @RequestParam String cardId,
+                                                 @RequestParam int quantity,
+                                                 @RequestParam boolean IsHolo,
+                                                 @RequestParam String condition,
                                                  Authentication authentication) {
         Utente utente = userService.getCurrentUser(authentication);
-        return ResponseEntity.ok(collectionService.addCardToCollection(collectionId, cardId, utente));
+
+        // Crea un oggetto NewCardDTO con tutti i parametri
+        NewCardDTO newCardDTO = new NewCardDTO(cardId, quantity, IsHolo, condition);
+
+        // Passa il NewCardDTO al servizio
+        return ResponseEntity.ok(collectionService.addCardToCollection(collectionId, newCardDTO, utente));
     }
 }

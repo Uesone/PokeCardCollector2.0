@@ -29,9 +29,10 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // JWT è stateless
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll() // Consenti accesso agli endpoint di autenticazione
-                        .requestMatchers("/admin/backoffice/**").hasRole("ADMIN") // Solo admin può accedere al backoffice
-                        .anyRequest().authenticated() // Tutti gli altri endpoint richiedono autenticazione
+                        .requestMatchers("/auth/**").permitAll()  // Accesso libero agli endpoint di autenticazione
+                        .requestMatchers("/user/backoffice/**").hasRole("USER")  // Accesso per il ruolo USER al proprio backoffice
+                        .requestMatchers("/admin/backoffice/**").hasRole("ADMIN")  // Accesso per il ruolo ADMIN al backoffice admin
+                        .anyRequest().authenticated()  // Tutti gli altri endpoint richiedono autenticazione
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class); // Aggiungi il filtro JWT
 

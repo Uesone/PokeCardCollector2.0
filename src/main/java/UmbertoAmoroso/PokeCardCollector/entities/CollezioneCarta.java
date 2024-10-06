@@ -13,7 +13,6 @@ import java.util.UUID;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-
 public class CollezioneCarta {
 
     @Id
@@ -26,4 +25,13 @@ public class CollezioneCarta {
     @ManyToOne
     @JoinColumn(name = "collezione_id")
     private Collezione collezione;
+
+    @Column(nullable = false)
+    private int quantity;  // Quantità della carta nella collezione
+
+    @Column(nullable = false)
+    private boolean IsHolo;  // Indica se la carta è olografica
+
+    @Column(nullable = false)
+    private String condition;  // Condizione della carta (es. "Mint", "Near Mint", ecc.)
 }
