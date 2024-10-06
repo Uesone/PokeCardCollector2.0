@@ -1,5 +1,6 @@
 package UmbertoAmoroso.PokeCardCollector.Config;
 
+import UmbertoAmoroso.PokeCardCollector.security.JwtAuthFilter;
 import UmbertoAmoroso.PokeCardCollector.services.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -14,6 +15,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 public class SecurityConfig {
@@ -22,26 +24,25 @@ public class SecurityConfig {
     private CustomUserDetailsService userDetailsService;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthFilter jwtAuthFilter) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable) // Disabilita CSRF
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Nessuna sessione
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // JWT è stateless
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll() // Consenti accesso agli endpoint di autenticazione
                         .requestMatchers("/admin/backoffice/**").hasRole("ADMIN") // Solo admin può accedere al backoffice
                         .anyRequest().authenticated() // Tutti gli altri endpoint richiedono autenticazione
-                );
+                )
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class); // Aggiungi il filtro JWT
 
         return http.build();
     }
 
-    // Definisci AuthenticationManager come bean
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
-    // Definisci un AuthenticationProvider per gestire l'autenticazione con userDetailsService
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
@@ -50,9 +51,13 @@ public class SecurityConfig {
         return authProvider;
     }
 
-    // Definisci PasswordEncoder come bean
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public JwtAuthFilter jwtAuthFilter() {
+        return new JwtAuthFilter(); // Definisci JwtAuthFilter come bean
     }
 }
