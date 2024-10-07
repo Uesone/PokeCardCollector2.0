@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.UUID;
+import java.util.List;
 
 @Getter
 @Setter
@@ -32,12 +33,14 @@ public class JwtTokenProvider {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes());
     }
 
-    public String generateToken(UUID userId) {
+    // Modifica per includere i ruoli
+    public String generateToken(UUID userId, List<String> roles) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
 
         return Jwts.builder()
                 .setSubject(userId.toString())
+                .claim("roles", roles)  // Aggiungi i ruoli senza il prefisso "ROLE_"
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(getSigningKey(), SignatureAlgorithm.HS512)
@@ -51,6 +54,16 @@ public class JwtTokenProvider {
                 .parseClaimsJws(token)
                 .getBody();
         return UUID.fromString(claims.getSubject());
+    }
+
+    // Metodo per estrarre i ruoli dal token JWT
+    public List<String> getRolesFromJWT(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.get("roles", List.class);
     }
 
     public boolean validateToken(String token) {

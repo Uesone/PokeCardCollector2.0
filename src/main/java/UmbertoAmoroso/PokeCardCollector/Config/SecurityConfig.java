@@ -19,7 +19,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 public class SecurityConfig {
-
     @Autowired
     private CustomUserDetailsService userDetailsService;
 
@@ -27,14 +26,14 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthFilter jwtAuthFilter) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // JWT è stateless
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()  // Accesso libero agli endpoint di autenticazione
-                        .requestMatchers("/user/backoffice/**").hasRole("USER")  // Accesso per il ruolo USER al proprio backoffice
-                        .requestMatchers("/admin/backoffice/**").hasRole("ADMIN")  // Accesso per il ruolo ADMIN al backoffice admin
-                        .anyRequest().authenticated()  // Tutti gli altri endpoint richiedono autenticazione
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/user/backoffice/**").hasAuthority("USER") // Modificato in hasRole
+                        .requestMatchers("/admin/backoffice/**").hasAuthority("ADMIN") // Modificato in hasRole
+                        .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class); // Aggiungi il filtro JWT
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -59,6 +58,6 @@ public class SecurityConfig {
 
     @Bean
     public JwtAuthFilter jwtAuthFilter() {
-        return new JwtAuthFilter(); // Definisci JwtAuthFilter come bean
+        return new JwtAuthFilter();
     }
 }

@@ -24,10 +24,10 @@ public class ExternalCardService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    @Value("${external.api.url}")
+    @Value("$${APICARD_URL}")
     private String apiUrl;
 
-    @Value("${external.api.key}")
+    @Value("${APICARD_KEY}")
     private String apiKey;
 
     public CardDTO fetchCardDetails(String cardId) {

@@ -7,10 +7,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+
+import java.util.Collections;
 
 @Getter
 @Setter
@@ -27,10 +30,12 @@ public class CustomUserDetailsService implements UserDetailsService {
         Utente utente = utenteRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Utente non trovato con email: " + email));
 
+        String role = utente.getRole().name();  // "USER" o "ADMIN" senza "ROLE_"
+
         return org.springframework.security.core.userdetails.User
                 .withUsername(utente.getEmail())
                 .password(utente.getPassword())
-                .roles(utente.getRole().name()) // Assicura che i ruoli siano corretti
+                .authorities(Collections.singletonList(new SimpleGrantedAuthority(role)))
                 .build();
     }
 

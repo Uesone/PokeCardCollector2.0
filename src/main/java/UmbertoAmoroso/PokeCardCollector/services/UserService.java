@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -21,8 +23,9 @@ public class UserService {
     private UtenteRepository utenteRepository;
 
     public Utente getCurrentUser(Authentication authentication) {
-        String userEmail = authentication.getName();
-        return utenteRepository.findByEmail(userEmail)
+        UUID userId = (UUID) authentication.getPrincipal(); // Ottieni l'ID utente dal Principal
+        System.out.println("Fetching user by ID: " + userId);
+        return utenteRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Utente non trovato"));
     }
 }
