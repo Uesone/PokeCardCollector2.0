@@ -57,18 +57,18 @@ public class CollectionService {
             throw new RuntimeException("Non autorizzato");
         }
 
-        // Chiamata all'API esterna per ottenere i dettagli della carta
         PokemonCardDTO card = pokemonCardService.getCardById(cardDTO.apiId());
 
         CollezioneCarta collezioneCarta = new CollezioneCarta();
         collezioneCarta.setApiId(card.getId());
         collezioneCarta.setCollezione(collezione);
         collezioneCarta.setQuantity(cardDTO.quantity());
-        collezioneCarta.setIsHolo(cardDTO.isHolo());
+        collezioneCarta.setIsHolo(cardDTO.IsHolo());  // Utilizza il campo corretto
         collezioneCarta.setCondition(cardDTO.condition());
 
         return collezioneCartaRepository.save(collezioneCarta);
     }
+
 
     // Rimuovi una carta da una collezione
     public void removeCardFromCollection(UUID collectionId, UUID cardId, Utente utente) {

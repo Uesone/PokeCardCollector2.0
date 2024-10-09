@@ -6,6 +6,6 @@ import jakarta.validation.constraints.NotEmpty;
 public record NewCardDTO(
         @NotEmpty String apiId,
         int quantity,
-        boolean isHolo,
+        boolean IsHolo,
         String condition
 ) {}

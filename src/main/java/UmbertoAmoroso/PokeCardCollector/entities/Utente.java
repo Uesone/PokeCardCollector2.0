@@ -1,6 +1,7 @@
 package UmbertoAmoroso.PokeCardCollector.entities;
 
 import UmbertoAmoroso.PokeCardCollector.enums.Role;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
