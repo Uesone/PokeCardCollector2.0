@@ -32,11 +32,11 @@ public class UserCardController {
     @GetMapping("/search")
     public ResponseEntity<List<PokemonCardDTO>> searchCardsByName(
             @RequestParam String name,
-            @RequestParam(defaultValue = "false") boolean isHolo) {
-
-        List<PokemonCardDTO> cards = pokemonCardService.searchCardsByName(name, isHolo);
+            @RequestParam(required = false, defaultValue = "false") boolean holo) {
+        List<PokemonCardDTO> cards = pokemonCardService.searchCardsByName(name, holo);
         return ResponseEntity.ok(cards);
     }
+
 
 
     // Aggiungi una carta a una collezione

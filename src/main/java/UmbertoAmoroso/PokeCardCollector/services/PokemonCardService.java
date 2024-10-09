@@ -82,29 +82,28 @@ public class PokemonCardService {
         headers.set("X-Api-Key", pokemonApiKey);
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
-        // Effettua la richiesta e ottieni la risposta
         ResponseEntity<PokemonCardApiResponse[]> response = restTemplate.exchange(
                 url, HttpMethod.GET, entity, PokemonCardApiResponse[].class
         );
 
         PokemonCardApiResponse[] cardsData = response.getBody();
-
-        if (cardsData != null && cardsData.length > 0) {
-            return Arrays.stream(cardsData)
-                    .map(card -> new PokemonCardDTO(
-                            card.getData().getName(),
-                            card.getData().getImages().getLarge(), // Assume che vuoi l'immagine grande
-                            card.getData().getSet().getName(),
-                            card.getData().getRarity(),
-                            UUID.randomUUID(), // UUID per identificare l'oggetto locale
-                            card.getData().getId(),
-                            1, // Quantità di default, personalizzabile
-                            isHolo,
-                            "Mint" // Condizione di default, personalizzabile
-                    ))
-                    .collect(Collectors.toList());
-        } else {
+        if (cardsData == null || cardsData.length == 0) {
             throw new RuntimeException("No cards found with name: " + name);
         }
-    }}
+
+        return Arrays.stream(cardsData)
+                .map(card -> new PokemonCardDTO(
+                        card.getData().getName(),
+                        card.getData().getImages().getLarge(),
+                        card.getData().getSet().getName(),
+                        card.getData().getRarity(),
+                        UUID.randomUUID(),
+                        card.getData().getId(),
+                        1, // Quantità di default
+                        isHolo,
+                        "Mint" // Condizione di default
+                ))
+                .collect(Collectors.toList());
+    }
+}
 

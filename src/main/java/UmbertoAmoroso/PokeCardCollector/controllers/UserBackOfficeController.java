@@ -119,4 +119,12 @@ public class UserBackOfficeController {
         collectionService.deleteCollection(collectionId, utente);
         return ResponseEntity.noContent().build();
     }
+    @GetMapping("/search")
+    public ResponseEntity<List<PokemonCardDTO>> searchCardsByName(
+            @RequestParam String name,
+            @RequestParam(required = false, defaultValue = "false") boolean holo) {
+        List<PokemonCardDTO> cards = pokemonCardService.searchCardsByName(name, holo);
+        return ResponseEntity.ok(cards);
+    }
+
 }
