@@ -1,5 +1,6 @@
 package UmbertoAmoroso.PokeCardCollector.controllers;
 
+import UmbertoAmoroso.PokeCardCollector.dto.CollezioneDTO;
 import UmbertoAmoroso.PokeCardCollector.dto.NewCollectionDTO;
 import UmbertoAmoroso.PokeCardCollector.dto.NewCollectionResponseDTO;
 import UmbertoAmoroso.PokeCardCollector.entities.Collezione;
@@ -16,6 +17,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -29,34 +32,35 @@ public class CollectionController {
     private CollectionService collectionService;
 
     @Autowired
-    private UserService userService; // Service per recuperare l'utente autenticato
+    private UserService userService;
 
-    // Crea una nuova collezione
     @PostMapping("")
     public NewCollectionResponseDTO saveCollection(@RequestBody NewCollectionDTO body, Authentication authentication) {
-        Utente utente = userService.getCurrentUser(authentication); // Recupera l'utente dal token JWT
+        Utente utente = userService.getCurrentUser(authentication);
         Collezione newCollection = collectionService.save(body, utente);
         return new NewCollectionResponseDTO(newCollection.getId());
     }
 
-    // Visualizza tutte le collezioni dell'utente autenticato
     @GetMapping("")
-    public List<Collezione> getCollections(Authentication authentication) {
-        Utente utente = userService.getCurrentUser(authentication); // Recupera l'utente autenticato
-        return collectionService.getCollectionsByUser(utente.getId());
+    public List<CollezioneDTO> getCollections(Authentication authentication) {
+        Utente utente = userService.getCurrentUser(authentication);
+        return collectionService.getCollectionsByUser(utente.getId())
+                .stream()
+                .map(CollezioneDTO::new)
+                .collect(Collectors.toList());
     }
 
-    // Aggiorna una collezione esistente
     @PutMapping("/{collectionId}")
-    public Collezione updateCollection(@PathVariable UUID collectionId, @RequestBody NewCollectionDTO body, Authentication authentication) {
-        Utente utente = userService.getCurrentUser(authentication); // Recupera l'utente autenticato
-        return collectionService.updateCollection(collectionId, body, utente);
+    public CollezioneDTO updateCollection(@PathVariable UUID collectionId, @RequestBody NewCollectionDTO body, Authentication authentication) {
+        Utente utente = userService.getCurrentUser(authentication);
+        Collezione updatedCollection = collectionService.updateCollection(collectionId, body, utente);
+        return new CollezioneDTO(updatedCollection);
     }
 
-    // Cancella una collezione
     @DeleteMapping("/{collectionId}")
     public void deleteCollection(@PathVariable UUID collectionId, Authentication authentication) {
-        Utente utente = userService.getCurrentUser(authentication); // Recupera l'utente autenticato
+        Utente utente = userService.getCurrentUser(authentication);
         collectionService.deleteCollection(collectionId, utente);
     }
 }
+

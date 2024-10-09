@@ -30,8 +30,12 @@ public class CollezioneCarta {
     private int quantity;  // Quantità della carta nella collezione
 
     @Column(nullable = false)
-    private boolean IsHolo;  // Indica se la carta è olografica
+    private boolean holo;  // Indica se la carta è olografica
 
     @Column(nullable = false)
     private String condition;  // Condizione della carta (es. "Mint", "Near Mint", ecc.)
+
+    public boolean holo() {
+        return holo;
+    }
 }

@@ -1,8 +1,7 @@
 package UmbertoAmoroso.PokeCardCollector.controllers;
 
 
-
-import UmbertoAmoroso.PokeCardCollector.entities.Collezione;
+import UmbertoAmoroso.PokeCardCollector.dto.CollezioneDTO;
 import UmbertoAmoroso.PokeCardCollector.services.CollectionService;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,11 +13,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-
 @RestController
 @RequestMapping("/admin/backoffice")
 public class AdminBackOfficeController {
@@ -28,8 +28,11 @@ public class AdminBackOfficeController {
 
     @GetMapping("/collections")
     @PreAuthorize("hasRole('ADMIN')")
-    public List<Collezione> getAllCollections() {
-        return collectionService.getAllCollections();
+    public List<CollezioneDTO> getAllCollections() {
+        return collectionService.getAllCollections()
+                .stream()
+                .map(CollezioneDTO::new)
+                .collect(Collectors.toList());
     }
 
     @DeleteMapping("/collections/{collectionId}")

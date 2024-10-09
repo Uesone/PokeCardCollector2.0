@@ -3,6 +3,7 @@ package UmbertoAmoroso.PokeCardCollector.controllers;
 import UmbertoAmoroso.PokeCardCollector.dto.LoginRequestDTO;
 import UmbertoAmoroso.PokeCardCollector.dto.LoginResponseDTO;
 import UmbertoAmoroso.PokeCardCollector.dto.RegisterRequestDTO;
+import UmbertoAmoroso.PokeCardCollector.dto.UtenteDTO;
 import UmbertoAmoroso.PokeCardCollector.entities.Utente;
 import UmbertoAmoroso.PokeCardCollector.security.JwtTokenProvider;
 import UmbertoAmoroso.PokeCardCollector.services.AuthService;
@@ -36,10 +37,8 @@ public class AuthController {
     @Autowired
     private CustomUserDetailsService userDetailsService;
 
-    // Login
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginRequestDTO loginRequest) {
-        // Autentica l'utente
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.getEmail(),
@@ -47,26 +46,18 @@ public class AuthController {
                 )
         );
         SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        // Ottieni i dettagli dell'utente autenticato
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         Utente utente = userDetailsService.loadFullUserByUsername(userDetails.getUsername());
-
-        // Ottieni i ruoli dell'utente come lista di stringhe
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
-
-        // Genera il token JWT con i ruoli dell'utente
         String jwt = jwtTokenProvider.generateToken(utente.getId(), roles);
-
         return ResponseEntity.ok(new LoginResponseDTO(jwt));
     }
 
-    // Registrazione
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody RegisterRequestDTO registerRequest) {
-        Utente newUser = authService.registerUser(registerRequest);
-        return ResponseEntity.ok(newUser);
+    public ResponseEntity<UtenteDTO> registerUser(@RequestBody RegisterRequestDTO registerRequest) {
+        Utente newUtente = authService.registerUser(registerRequest);
+        return ResponseEntity.ok(new UtenteDTO(newUtente));
     }
 }

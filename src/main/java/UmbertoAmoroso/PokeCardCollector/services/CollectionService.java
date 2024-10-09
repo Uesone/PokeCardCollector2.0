@@ -49,7 +49,9 @@ public class CollectionService {
     }
 
     // Aggiungi una carta a una collezione
-    public CollezioneCarta addCardToCollection(UUID collectionId, NewCardDTO cardDTO, Utente utente) {
+    // Nella classe CollectionService
+
+    public PokemonCardDTO addCardToCollection(UUID collectionId, NewCardDTO cardDTO, Utente utente) {
         Collezione collezione = collezioneRepository.findById(collectionId)
                 .orElseThrow(() -> new RuntimeException("Collezione non trovata"));
 
@@ -57,17 +59,35 @@ public class CollectionService {
             throw new RuntimeException("Non autorizzato");
         }
 
-        PokemonCardDTO card = pokemonCardService.getCardById(cardDTO.apiId());
+        // Recupera i dettagli della carta dall'API
+        PokemonCardDTO cardDetails = pokemonCardService.getCardById(cardDTO.getApiId(), cardDTO.isHolo());
 
+        // Crea l'oggetto CollezioneCarta
         CollezioneCarta collezioneCarta = new CollezioneCarta();
-        collezioneCarta.setApiId(card.getId());
+        collezioneCarta.setApiId(cardDetails.getApiId());
         collezioneCarta.setCollezione(collezione);
-        collezioneCarta.setQuantity(cardDTO.quantity());
-        collezioneCarta.setIsHolo(cardDTO.IsHolo());  // Utilizza il campo corretto
-        collezioneCarta.setCondition(cardDTO.condition());
+        collezioneCarta.setQuantity(cardDTO.getQuantity());
+        collezioneCarta.setHolo(cardDTO.isHolo());
+        collezioneCarta.setCondition(cardDTO.getCondition());
 
-        return collezioneCartaRepository.save(collezioneCarta);
+        // Aggiungi altri campi alla risposta finale di PokemonCardDTO
+        PokemonCardDTO pokemonCardDTO = new PokemonCardDTO(
+                cardDetails.getName(),
+                cardDetails.getImageUrl(),
+                cardDetails.getSet(),
+                cardDetails.getRarity(),
+                collezioneCarta.getId(),
+                collezioneCarta.getApiId(),
+                collezioneCarta.getQuantity(),
+                collezioneCarta.isHolo(),
+                collezioneCarta.getCondition()
+        );
+
+        collezioneCartaRepository.save(collezioneCarta);
+        return pokemonCardDTO;
     }
+
+
 
 
     // Rimuovi una carta da una collezione

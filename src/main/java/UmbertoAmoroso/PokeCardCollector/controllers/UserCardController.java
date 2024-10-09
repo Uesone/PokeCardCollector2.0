@@ -27,24 +27,30 @@ public class UserCardController {
     @Autowired
     private UserService userService;
 
-    // Ricerca carte per nome
+
+    // Ricerca carte per nome con opzione holo
     @GetMapping("/search")
-    public List<PokemonCardDTO> searchCardsByName(@RequestParam String name) {
-        return pokemonCardService.searchCardsByName(name);
+    public ResponseEntity<List<PokemonCardDTO>> searchCardsByName(
+            @RequestParam String name,
+            @RequestParam(defaultValue = "false") boolean isHolo) {
+
+        List<PokemonCardDTO> cards = pokemonCardService.searchCardsByName(name, isHolo);
+        return ResponseEntity.ok(cards);
     }
+
 
     // Aggiungi una carta a una collezione
     @PostMapping("/collections/{collectionId}/add")
     public ResponseEntity<?> addCardToCollection(@PathVariable UUID collectionId,
                                                  @RequestParam String cardId,
                                                  @RequestParam int quantity,
-                                                 @RequestParam boolean IsHolo,
+                                                 @RequestParam boolean holo,
                                                  @RequestParam String condition,
                                                  Authentication authentication) {
         Utente utente = userService.getCurrentUser(authentication);
 
         // Crea un oggetto NewCardDTO con tutti i parametri
-        NewCardDTO newCardDTO = new NewCardDTO(cardId, quantity, IsHolo, condition);
+        NewCardDTO newCardDTO = new NewCardDTO(cardId, holo, quantity, condition);
 
         // Passa il NewCardDTO al servizio
         return ResponseEntity.ok(collectionService.addCardToCollection(collectionId, newCardDTO, utente));

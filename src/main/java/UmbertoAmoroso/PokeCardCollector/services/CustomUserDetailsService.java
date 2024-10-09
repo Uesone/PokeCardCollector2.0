@@ -30,7 +30,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         Utente utente = utenteRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Utente non trovato con email: " + email));
 
-        String role = utente.getRole().name();  // "USER" o "ADMIN" senza "ROLE_"
+        String role = utente.getRole().name();
 
         return org.springframework.security.core.userdetails.User
                 .withUsername(utente.getEmail())
@@ -39,7 +39,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .build();
     }
 
-    // Metodo per ottenere un'istanza completa di Utente
+
     public Utente loadFullUserByUsername(String email) throws UsernameNotFoundException {
         return utenteRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Utente non trovato con email: " + email));
