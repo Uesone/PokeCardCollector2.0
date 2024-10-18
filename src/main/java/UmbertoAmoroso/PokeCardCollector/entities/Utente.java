@@ -1,5 +1,9 @@
 package UmbertoAmoroso.PokeCardCollector.entities;
 
+<<<<<<< Updated upstream
+=======
+import UmbertoAmoroso.PokeCardCollector.enums.Role;
+>>>>>>> Stashed changes
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
