@@ -14,11 +14,13 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
+import java.util.UUID;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
@@ -39,9 +41,9 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .build();
     }
 
-
-    public Utente loadFullUserByUsername(String email) throws UsernameNotFoundException {
-        return utenteRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Utente non trovato con email: " + email));
+    // Metodo per restituire l'entità Utente tramite ID
+    public Utente loadUserById(UUID userId) {
+        return utenteRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("Utente non trovato con ID: " + userId));
     }
 }

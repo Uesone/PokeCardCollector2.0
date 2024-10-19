@@ -8,9 +8,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-
-import java.util.UUID;
 
 @Getter
 @Setter
@@ -23,9 +22,22 @@ public class UserService {
     private UtenteRepository utenteRepository;
 
     public Utente getCurrentUser(Authentication authentication) {
-        UUID userId = (UUID) authentication.getPrincipal(); // Ottieni l'ID utente dal Principal
-        System.out.println("Fetching user by ID: " + userId);
-        return utenteRepository.findById(userId)
+        Object principal = authentication.getPrincipal();
+        String email = switch (principal) {
+            case UserDetails userDetails -> userDetails.getUsername(); // L'username è l'email
+
+            case Utente utente -> utente.getEmail(); // Se principal è già un Utente
+
+            case String string -> string; // Se principal è una stringa contenente l'email
+
+            case null, default -> throw new RuntimeException("Tipo di autenticazione non supportato");
+        };
+
+        // Gestisci diversi tipi di principal
+
+        // Cerca l'utente nel database utilizzando l'email
+        return utenteRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Utente non trovato"));
     }
+
 }
