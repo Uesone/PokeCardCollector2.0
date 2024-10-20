@@ -1,70 +1,52 @@
 package UmbertoAmoroso.PokeCardCollector.security;
 
+import UmbertoAmoroso.PokeCardCollector.services.CustomUserDetailsService;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.web.filter.OncePerRequestFilter;
-import UmbertoAmoroso.PokeCardCollector.entities.Utente;
-import UmbertoAmoroso.PokeCardCollector.services.CustomUserDetailsService;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+
+@Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
     @Autowired
-    private CustomUserDetailsService userDetailsService;  // Inietta il servizio userDetailsService
+    private CustomUserDetailsService customUserDetailsService;
 
     @Override
-    protected void doFilterInternal(@NonNull HttpServletRequest request,
-                                    @NonNull HttpServletResponse response,
-                                    @NonNull FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        String token = getJwtFromRequest(request);
-
+        String token = jwtTokenProvider.resolveToken(request);
         if (token != null && jwtTokenProvider.validateToken(token)) {
-            UUID userId = jwtTokenProvider.getUserIdFromJWT(token);
-            List<String> roles = jwtTokenProvider.getRolesFromJWT(token);
+            String email = jwtTokenProvider.getEmailFromToken(token);
+            var userDetails = customUserDetailsService.loadUserByUsername(email);
 
-            // Carica l'entità Utente utilizzando l'ID
-            Utente utente = userDetailsService.loadUserById(userId);
-
-            // Imposta l'oggetto Utente come principal nell'autenticazione
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                    utente, null, roles.stream()
-                    .map(SimpleGrantedAuthority::new)
-                    .collect(Collectors.toList())
-            );
+                    userDetails, null, userDetails.getAuthorities());
 
-            // Imposta l'autenticazione nel SecurityContext
+            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
+
         filterChain.doFilter(request, response);
-    }
-
-
-
-    private String getJwtFromRequest(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
-        }
-        return null;
     }
 }

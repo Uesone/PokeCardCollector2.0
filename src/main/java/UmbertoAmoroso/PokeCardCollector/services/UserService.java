@@ -2,42 +2,56 @@ package UmbertoAmoroso.PokeCardCollector.services;
 
 import UmbertoAmoroso.PokeCardCollector.entities.Utente;
 import UmbertoAmoroso.PokeCardCollector.repositories.UtenteRepository;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
+import java.util.List;
+import java.util.UUID;
+
 @Service
 public class UserService {
 
     @Autowired
     private UtenteRepository utenteRepository;
 
-    public Utente getCurrentUser(Authentication authentication) {
-        Object principal = authentication.getPrincipal();
-        String email = switch (principal) {
-            case UserDetails userDetails -> userDetails.getUsername(); // L'username è l'email
+    // Metodo per ottenere l'utente autenticato corrente
+    public Utente getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-            case Utente utente -> utente.getEmail(); // Se principal è già un Utente
+        // Verifica che l'utente sia autenticato
+        if (authentication != null && authentication.isAuthenticated()) {
+            Object principal = authentication.getPrincipal();
 
-            case String string -> string; // Se principal è una stringa contenente l'email
+            // Se il principal è di tipo UserDetails, otteniamo l'email (username)
+            String email = null;
+            if (principal instanceof UserDetails) {
+                email = ((UserDetails) principal).getUsername(); // Username è l'email in questo caso
+            } else if (principal instanceof String) {
+                email = (String) principal;
+            }
 
-            case null, default -> throw new RuntimeException("Tipo di autenticazione non supportato");
-        };
+            // Se è stata trovata un'email valida, otteniamo l'utente dal database
+            if (email != null) {
+                return utenteRepository.findByEmail(email)
+                        .orElseThrow(() -> new RuntimeException("User not found"));
+            }
+        }
 
-        // Gestisci diversi tipi di principal
-
-        // Cerca l'utente nel database utilizzando l'email
-        return utenteRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Utente non trovato"));
+        throw new RuntimeException("User not authenticated");
     }
 
+    // Metodo per ottenere tutti gli utenti (solo admin)
+    public List<Utente> getAllUsers() {
+        return utenteRepository.findAll();
+    }
+
+    // Metodo per eliminare un utente (solo admin)
+    public void deleteUser(UUID userId) {
+        Utente utente = utenteRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        utenteRepository.delete(utente);
+    }
 }

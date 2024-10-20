@@ -1,51 +1,101 @@
 package UmbertoAmoroso.PokeCardCollector.dto;
 
-import UmbertoAmoroso.PokeCardCollector.entities.CollezioneCarta;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.util.UUID;
 
 @Getter
 @Setter
-@NoArgsConstructor
 public class PokemonCardDTO {
+    private String id;
     private String name;
-    private String imageUrl;
-    private String set;
+    private String supertype;
+    private String[] subtypes;
+    private String hp;
+    private String[] types;
+    private String[] evolvesTo;
+    private String[] rules;
+    private AttackDTO[] attacks;
+    private WeaknessDTO[] weaknesses;
+    private String[] retreatCost;
+    private int convertedRetreatCost;
+    private SetDTO set;
+    private String number;
+    private String artist;
     private String rarity;
-    private UUID id;
-    private String apiId;
+    private int[] nationalPokedexNumbers;
+    private LegalitiesDTO legalities;
+    private ImagesDTO images;
+    private TcgPlayerDTO tcgplayer;
+
+    // Aggiungi il campo quantity
     private int quantity;
-    private boolean holo;
-    private String condition;
+}
 
-    // Costruttore per dati dell'API
-    public PokemonCardDTO(String name, String imageUrl, String set, String rarity, UUID id, String apiId, int quantity, boolean holo, String condition) {
-        this.name = name;
-        this.imageUrl = imageUrl;
-        this.set = set;
-        this.rarity = rarity;
-        this.id = id;
-        this.apiId = apiId;
-        this.quantity = quantity;
-        this.holo = holo;
-        this.condition = condition;
-    }
+@Getter
+@Setter
+class AttackDTO {
+    private String name;
+    private String[] cost;
+    private int convertedEnergyCost;
+    private String damage;
+    private String text;
+}
 
-    // Costruttore per combinare CollezioneCarta e dati dell'API
-    public PokemonCardDTO(CollezioneCarta collezioneCarta, PokemonCardDTO apiData) {
-        this.id = collezioneCarta.getId();
-        this.apiId = collezioneCarta.getApiId();
-        this.quantity = collezioneCarta.getQuantity();
-        this.holo = collezioneCarta.holo();
-        this.condition = collezioneCarta.getCondition();
+@Getter
+@Setter
+class WeaknessDTO {
+    private String type;
+    private String value;
+}
 
-        // Dati provenienti dall'API
-        this.name = apiData.getName();
-        this.imageUrl = apiData.getImageUrl();
-        this.set = apiData.getSet();
-        this.rarity = apiData.getRarity();
-    }
+@Getter
+@Setter
+class SetDTO {
+    private String id;
+    private String name;
+    private String series;
+    private int printedTotal;
+    private int total;
+    private LegalitiesDTO legalities;
+    private String ptcgoCode;
+    private String releaseDate;
+    private String updatedAt;
+    private ImagesDTO images;
+}
+
+@Getter
+@Setter
+class LegalitiesDTO {
+    private String unlimited;
+    private String expanded;
+}
+
+@Getter
+@Setter
+class ImagesDTO {
+    private String small;
+    private String large;
+}
+
+@Getter
+@Setter
+class TcgPlayerDTO {
+    private String url;
+    private PricesDTO prices;
+}
+
+@Getter
+@Setter
+class PricesDTO {
+    private HolofoilDTO holofoil;
+}
+
+@Getter
+@Setter
+class HolofoilDTO {
+    private double low;
+    private double mid;
+    private double high;
+    private double market;
+    private double directLow;
 }

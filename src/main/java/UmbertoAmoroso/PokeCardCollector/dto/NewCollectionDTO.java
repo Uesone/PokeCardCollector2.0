@@ -1,10 +1,11 @@
 package UmbertoAmoroso.PokeCardCollector.dto;
 
-import jakarta.validation.constraints.NotEmpty;
+import lombok.Getter;
+import lombok.Setter;
 
-
-
-public record NewCollectionDTO(
-        @NotEmpty String name,
-        @NotEmpty String description
-) {}
+@Setter
+@Getter
+public class NewCollectionDTO {
+    private String name;
+    private String description;
+}

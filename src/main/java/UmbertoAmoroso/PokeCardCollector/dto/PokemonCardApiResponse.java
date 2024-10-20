@@ -3,9 +3,12 @@ package UmbertoAmoroso.PokeCardCollector.dto;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter
-@Setter
-public class PokemonCardApiResponse {
-    private PokemonCardData data;  // Contiene i dettagli della carta
-}
+import java.util.List;
 
+@Setter
+@Getter
+public class PokemonCardApiResponse {
+    // Getters and Setters
+    private List<PokemonCardData> data;
+
+}

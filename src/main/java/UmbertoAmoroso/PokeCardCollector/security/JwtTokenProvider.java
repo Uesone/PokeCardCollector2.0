@@ -1,9 +1,8 @@
 package UmbertoAmoroso.PokeCardCollector.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,9 +11,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.util.Base64;
 import java.util.Date;
-import java.util.List;
-import java.util.UUID;
 
 @Getter
 @Setter
@@ -23,57 +21,55 @@ import java.util.UUID;
 @Component
 public class JwtTokenProvider {
 
-    @Value("${jwt.secret}")
-    private String jwtSecret;
+    private SecretKey secretKey;
 
     @Value("${jwt.expiration}")
-    private long jwtExpirationMs;
+    private long expiration;
 
-    private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(jwtSecret.getBytes());
+    @Value("${jwt.secret}")
+    public void setSecretKey(String secret) {
+        byte[] decodedKey = Base64.getDecoder().decode(secret);
+        if (decodedKey.length * 8 < 512) { // Controlla se la chiave è inferiore a 512 bit
+            throw new IllegalArgumentException("La chiave deve essere di almeno 512 bit.");
+        }
+        this.secretKey = Keys.hmacShaKeyFor(decodedKey); // Inizializzazione chiave segreta
     }
 
-    // Genera il token includendo i ruoli
-    public String generateToken(UUID userId, List<String> roles) {
+    public String createToken(String email) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
+        Date expiryDate = new Date(now.getTime() + expiration);
 
         return Jwts.builder()
-                .setSubject(userId.toString())
-                .claim("roles", roles)
+                .setSubject(email)
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
-                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
+                .signWith(secretKey, SignatureAlgorithm.HS512)
                 .compact();
     }
 
-    public UUID getUserIdFromJWT(String token) {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
+    public String getEmailFromToken(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(secretKey)
                 .build()
                 .parseClaimsJws(token)
-                .getBody();
-        return UUID.fromString(claims.getSubject());
-    }
-
-    public List<String> getRolesFromJWT(String token) {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-        return claims.get("roles", List.class);
+                .getBody()
+                .getSubject();
     }
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder()
-                    .setSigningKey(getSigningKey())
-                    .build()
-                    .parseClaimsJws(token);
+            Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token);
             return true;
-        } catch (Exception e) {
+        } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
+    }
+
+    public String resolveToken(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
     }
 }

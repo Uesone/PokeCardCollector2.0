@@ -1,17 +1,13 @@
 package UmbertoAmoroso.PokeCardCollector.dto;
 
-
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
-
+@Getter
 public class LoginRequestDTO {
+    // Getters and Setters
     private String email;
     private String password;
+
 }

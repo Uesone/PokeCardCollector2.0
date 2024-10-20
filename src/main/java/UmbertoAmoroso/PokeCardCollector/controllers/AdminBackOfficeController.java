@@ -1,43 +1,35 @@
 package UmbertoAmoroso.PokeCardCollector.controllers;
 
-
-import UmbertoAmoroso.PokeCardCollector.dto.CollezioneDTO;
+import UmbertoAmoroso.PokeCardCollector.entities.Collezione;
 import UmbertoAmoroso.PokeCardCollector.services.CollectionService;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-@Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
 @RestController
-@RequestMapping("/admin/backoffice")
+@RequestMapping("/admin/collections")
 public class AdminBackOfficeController {
 
     @Autowired
     private CollectionService collectionService;
 
-    @GetMapping("/collections")
+    // Accessibile solo agli admin per ottenere tutte le collezioni
     @PreAuthorize("hasRole('ADMIN')")
-    public List<CollezioneDTO> getAllCollections() {
-        return collectionService.getAllCollections()
-                .stream()
-                .map(CollezioneDTO::new)
-                .collect(Collectors.toList());
+    @GetMapping
+    public ResponseEntity<List<Collezione>> getAllCollections() {
+        List<Collezione> collections = collectionService.getAllCollections();
+        return ResponseEntity.ok(collections);
     }
 
-    @DeleteMapping("/collections/{collectionId}")
+    // Accessibile solo agli admin per eliminare una collezione
     @PreAuthorize("hasRole('ADMIN')")
-    public void deleteCollection(@PathVariable UUID collectionId) {
+    @DeleteMapping("/{collectionId}")
+    public ResponseEntity<Void> deleteCollectionAsAdmin(@PathVariable UUID collectionId) {
         collectionService.deleteCollectionAsAdmin(collectionId);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -3,9 +3,12 @@ package UmbertoAmoroso.PokeCardCollector.dto;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter
 @Setter
+@Getter
+
 public class ImageUrls {
+    // Getters and Setters
     private String small;
     private String large;
+
 }
