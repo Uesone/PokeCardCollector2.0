@@ -34,22 +34,23 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable) // Disable CSRF
                 .cors(cors -> cors.configurationSource(request -> {
                     var corsConfiguration = new org.springframework.web.cors.CorsConfiguration();
-                    corsConfiguration.addAllowedOrigin("http://localhost:3000"); // Set allowed origin
-                    corsConfiguration.addAllowedMethod("*"); // Allow all HTTP methods (GET, POST, etc.)
-                    corsConfiguration.addAllowedHeader("*"); // Allow any headers
-                    corsConfiguration.setAllowCredentials(true); // Allow credentials (cookies, etc.)
+                    corsConfiguration.addAllowedOrigin("http://localhost:3000");
+                    corsConfiguration.addAllowedMethod("*");
+                    corsConfiguration.addAllowedHeader("*");
+                    corsConfiguration.setAllowCredentials(true);
                     return corsConfiguration;
                 }))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless session
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/register/admin").hasRole("ADMIN") // Solo gli admin possono registrare altri admin
+                        .requestMatchers("/api/auth/register/admin").permitAll() // Permetti l'accesso libero alla registrazione admin
                         .requestMatchers("/api/auth/**").permitAll()  // Permetti l'accesso agli endpoint di autenticazione
-                        .anyRequest().authenticated() // Tutti gli altri endpoint richiedono autenticazione
+                        .anyRequest().authenticated() // Richiedi autenticazione per tutto il resto
                 )
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class); // Add JWT filter
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class); // Aggiungi JWT filter
 
         return http.build();
     }
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
