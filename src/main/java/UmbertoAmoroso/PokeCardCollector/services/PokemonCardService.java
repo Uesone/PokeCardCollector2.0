@@ -9,6 +9,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
@@ -30,33 +31,20 @@ public class PokemonCardService {
         HttpHeaders headers = new HttpHeaders();
         headers.set("X-Api-Key", apiKey);  // Aggiunta dell'API key negli headers
 
-        String url = apiPokemonUrl + "/cards?q=" + query + "&page=" + page + "&pageSize=" + pageSize;
+        // Formatta la query per assicurarsi che segua la sintassi corretta per la ricerca
+        String url = apiPokemonUrl + "/cards?q=name:" + query + "&page=" + page + "&pageSize=" + pageSize;
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
-        ResponseEntity<PokemonCardResponse> response = restTemplate.exchange(url, HttpMethod.GET, entity, PokemonCardResponse.class);
-
-        // Check for null response body and return empty list if necessary
-        return Optional.ofNullable(response.getBody())
-                .map(PokemonCardResponse::getData)
-                .orElse(List.of()); // Return an empty list if data is null
-    }
-
-    // Metodo per ottenere i dettagli di una singola carta tramite ID
-    public Optional<PokemonCardDTO> getPokemonCardById(String cardId) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("X-Api-Key", apiKey);
-
-        String url = apiPokemonUrl + "/cards/" + cardId;
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-
-        ResponseEntity<PokemonCardResponse> response = restTemplate.exchange(url, HttpMethod.GET, entity, PokemonCardResponse.class);
-
-        // Use Optional to safely retrieve the first card or empty if no result
-        return Optional.ofNullable(response.getBody())
-                .map(PokemonCardResponse::getData)
-                .stream()
-                .flatMap(List::stream)
-                .findFirst();  // Return the first card if available
+        try {
+            System.out.println("Calling URL: " + url);  // Log per vedere l'URL chiamato
+            ResponseEntity<PokemonCardResponse> response = restTemplate.exchange(url, HttpMethod.GET, entity, PokemonCardResponse.class);
+            return Optional.ofNullable(response.getBody())
+                    .map(PokemonCardResponse::getData)
+                    .orElse(List.of()); // Ritorna una lista vuota se data è null
+        } catch (HttpClientErrorException e) {
+            System.err.println("Errore nella ricerca delle carte: " + e.getMessage());
+            return List.of();  // Ritorna una lista vuota in caso di errore
+        }
     }
 
     // Classe di supporto per gestire la risposta JSON dell'API Pokémon

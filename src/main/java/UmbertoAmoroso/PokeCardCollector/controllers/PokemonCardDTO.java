@@ -1,5 +1,6 @@
 package UmbertoAmoroso.PokeCardCollector.controllers;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,6 +9,7 @@ import java.util.Map;
 
 @Getter
 @Setter
+@JsonInclude(JsonInclude.Include.NON_NULL)  // Aggiungi questa annotazione
 public class PokemonCardDTO {
     private String id;
     private String name;
@@ -27,8 +29,9 @@ public class PokemonCardDTO {
     private String rarity;
     private String flavorText;
     private List<Integer> nationalPokedexNumbers;
-    private Map<String, Legalities> legalities;
-    private Map<String, Images> images;
+
+    private Map<String, String> legalities;
+    private Images images;
     private TcgPlayer tcgplayer;
     private CardMarket cardmarket;
 
@@ -125,13 +128,5 @@ public class PokemonCardDTO {
             private double reverseHoloLow;
             private double reverseHoloTrend;
         }
-    }
-
-    @Getter
-    @Setter
-    public static class Legalities {
-        private String standard;
-        private String expanded;
-        private String unlimited;
     }
 }
