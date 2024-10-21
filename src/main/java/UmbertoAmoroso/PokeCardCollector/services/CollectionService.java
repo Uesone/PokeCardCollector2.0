@@ -1,132 +1,83 @@
 package UmbertoAmoroso.PokeCardCollector.services;
 
-import UmbertoAmoroso.PokeCardCollector.dto.PokemonCardDTO;
-import UmbertoAmoroso.PokeCardCollector.dto.NewCollectionDTO;
-import UmbertoAmoroso.PokeCardCollector.entities.Collezione;
-import UmbertoAmoroso.PokeCardCollector.entities.CollezioneCarta;
-import UmbertoAmoroso.PokeCardCollector.entities.Utente;
-import UmbertoAmoroso.PokeCardCollector.repositories.CollezioneCartaRepository;
-import UmbertoAmoroso.PokeCardCollector.repositories.CollezioneRepository;
+import UmbertoAmoroso.PokeCardCollector.dto.CardDTO;
+import UmbertoAmoroso.PokeCardCollector.dto.CollectionDTO;
+import UmbertoAmoroso.PokeCardCollector.entities.Collection;
+import UmbertoAmoroso.PokeCardCollector.entities.CollectionCard;
+import UmbertoAmoroso.PokeCardCollector.entities.User;
+import UmbertoAmoroso.PokeCardCollector.repositories.CollectionCardRepository;
+import UmbertoAmoroso.PokeCardCollector.repositories.CollectionRepository;
+import UmbertoAmoroso.PokeCardCollector.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class CollectionService {
 
     @Autowired
-    private CollezioneRepository collezioneRepository;
+    private CollectionRepository collectionRepository;
 
     @Autowired
-    private CollezioneCartaRepository collezioneCartaRepository;
+    private CollectionCardRepository collectionCardRepository;
 
     @Autowired
-    private PokemonCardService pokemonCardService;
+    private UserRepository userRepository;
 
-    // Aggiungi una carta a una collezione (usa NewCardDTO come input)
-    public PokemonCardDTO addCardToCollection(UUID collectionId, PokemonCardDTO cardDTO, Utente utente) {
-        Collezione collezione = collezioneRepository.findById(collectionId)
-                .orElseThrow(() -> new RuntimeException("Collezione non trovata"));
+    public List<CollectionDTO> getUserCollections(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
+        return collectionRepository.findByUser(user).stream().map(this::mapToDTO).collect(Collectors.toList());
+    }
 
-        if (!collezione.getUtente().getId().equals(utente.getId())) {
-            throw new RuntimeException("Non autorizzato");
-        }
+    public CollectionDTO createCollection(Long userId, String collectionName) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
+        Collection collection = new Collection();
+        collection.setName(collectionName);
+        collection.setUser(user);
+        Collection savedCollection = collectionRepository.save(collection);
+        return mapToDTO(savedCollection);
+    }
 
-        // Effettuiamo una chiamata all'API Pokemon TCG per ottenere informazioni dettagliate sulla carta
-        PokemonCardDTO cardDetails = pokemonCardService.searchCardsByName(cardDTO.getName(), cardDTO.getRarity() != null)
-                .stream()
+    public void addCardToCollection(Long collectionId, String cardId, String imageUrl) {
+        Collection collection = collectionRepository.findById(collectionId)
+                .orElseThrow(() -> new IllegalArgumentException("Collection not found"));
+        CollectionCard collectionCard = new CollectionCard();
+        collectionCard.setCardId(cardId);
+        collectionCard.setImageUrl(imageUrl);
+        collectionCard.setCollection(collection);
+        collectionCardRepository.save(collectionCard);
+    }
+
+    public void deleteCollection(Long collectionId) {
+        collectionRepository.deleteById(collectionId);
+    }
+
+    public void deleteCardFromCollection(Long collectionId, String cardId) {
+        Collection collection = collectionRepository.findById(collectionId)
+                .orElseThrow(() -> new IllegalArgumentException("Collection not found"));
+        List<CollectionCard> cards = collectionCardRepository.findByCollection(collection);
+        CollectionCard cardToRemove = cards.stream()
+                .filter(card -> card.getCardId().equals(cardId))
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("Carta non trovata"));
-
-        CollezioneCarta collezioneCarta = new CollezioneCarta();
-        collezioneCarta.setApiId(cardDetails.getId());  // Usa il metodo getId da PokemonCardDTO
-        collezioneCarta.setCollezione(collezione);
-        collezioneCarta.setQuantity(cardDTO.getQuantity());
-        collezioneCarta.setHolo(cardDTO.getRarity().equals("Holo"));
-        collezioneCarta.setCondition(cardDTO.getRarity());
-
-        collezioneCartaRepository.save(collezioneCarta);
-        return cardDetails;
+                .orElseThrow(() -> new IllegalArgumentException("Card not found in collection"));
+        collectionCardRepository.delete(cardToRemove);
     }
 
-    // Crea una nuova collezione per l'utente autenticato
-    public Collezione save(NewCollectionDTO body, Utente utente) {
-        Collezione collezione = new Collezione();
-        collezione.setName(body.getName());
-        collezione.setDescription(body.getDescription());
-        collezione.setUtente(utente);
-        return collezioneRepository.save(collezione);
+    private CollectionDTO mapToDTO(Collection collection) {
+        CollectionDTO dto = new CollectionDTO();
+        dto.setId(collection.getId());
+        dto.setName(collection.getName());
+        dto.setCards(collection.getCards().stream().map(this::mapCardToDTO).collect(Collectors.toList()));
+        return dto;
     }
 
-    // Restituisce tutte le collezioni dell'utente
-    public List<Collezione> getCollectionsByUser(UUID utenteId) {
-        return collezioneRepository.findByUtenteId(utenteId);
-    }
-
-    // Rimuovi una carta da una collezione
-    public void removeCardFromCollection(UUID collectionId, UUID cardId, Utente utente) {
-        Collezione collezione = collezioneRepository.findById(collectionId)
-                .orElseThrow(() -> new RuntimeException("Collezione non trovata"));
-
-        if (!collezione.getUtente().getId().equals(utente.getId())) {
-            throw new RuntimeException("Non autorizzato");
-        }
-
-        CollezioneCarta collezioneCarta = collezioneCartaRepository.findById(cardId)
-                .orElseThrow(() -> new RuntimeException("Carta non trovata"));
-
-        collezioneCartaRepository.delete(collezioneCarta);
-    }
-
-    // Visualizza tutte le carte di una collezione
-    public List<CollezioneCarta> getCardsInCollection(UUID collectionId, Utente utente) {
-        Collezione collezione = collezioneRepository.findById(collectionId)
-                .orElseThrow(() -> new RuntimeException("Collezione non trovata"));
-
-        if (!collezione.getUtente().getId().equals(utente.getId())) {
-            throw new RuntimeException("Non autorizzato");
-        }
-
-        return collezione.getCarte();
-    }
-
-    // Restituisce tutte le collezioni del sistema (solo per admin)
-    public List<Collezione> getAllCollections() {
-        return collezioneRepository.findAll();
-    }
-
-    // Cancella una collezione come admin
-    public void deleteCollectionAsAdmin(UUID collectionId) {
-        Collezione collezione = collezioneRepository.findById(collectionId)
-                .orElseThrow(() -> new RuntimeException("Collezione non trovata"));
-        collezioneRepository.delete(collezione);
-    }
-
-    // Aggiorna una collezione esistente (utente)
-    public Collezione updateCollection(UUID collectionId, NewCollectionDTO body, Utente utente) {
-        Collezione collezione = collezioneRepository.findById(collectionId)
-                .orElseThrow(() -> new RuntimeException("Collezione non trovata"));
-
-        if (!collezione.getUtente().getId().equals(utente.getId())) {
-            throw new RuntimeException("Non autorizzato");
-        }
-
-        collezione.setName(body.getName());
-        collezione.setDescription(body.getDescription());
-        return collezioneRepository.save(collezione);
-    }
-
-    // Cancella una collezione per l'utente autenticato
-    public void deleteCollection(UUID collectionId, Utente utente) {
-        Collezione collezione = collezioneRepository.findById(collectionId)
-                .orElseThrow(() -> new RuntimeException("Collezione non trovata"));
-
-        if (!collezione.getUtente().getId().equals(utente.getId())) {
-            throw new RuntimeException("Non autorizzato");
-        }
-
-        collezioneRepository.delete(collezione);
+    private CardDTO mapCardToDTO(CollectionCard card) {
+        CardDTO dto = new CardDTO();
+        dto.setId(card.getId());
+        dto.setCardId(card.getCardId());
+        dto.setImageUrl(card.getImageUrl());
+        return dto;
     }
 }

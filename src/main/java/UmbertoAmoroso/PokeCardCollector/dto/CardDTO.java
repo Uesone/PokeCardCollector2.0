@@ -1,24 +1,12 @@
 package UmbertoAmoroso.PokeCardCollector.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-
-@Setter
 @Getter
-
-@AllArgsConstructor
-@NoArgsConstructor
-
+@Setter
 public class CardDTO {
-    // Getters and Setters
-    private String apiId;
-    private String name;
-    private String set;
-    private String rarity;
-    private String imageUrl;
-    private boolean holo;
-
+    private Long id;
+    private String cardId; // ID della carta dall'API Pokémon
+    private String imageUrl; // URL dell'immagine della carta
 }

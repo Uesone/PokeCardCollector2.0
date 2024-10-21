@@ -1,57 +1,68 @@
 package UmbertoAmoroso.PokeCardCollector.services;
 
-import UmbertoAmoroso.PokeCardCollector.dto.PokemonCardDTO;
-import UmbertoAmoroso.PokeCardCollector.dto.PokemonCardApiResponse;
-import UmbertoAmoroso.PokeCardCollector.dto.PokemonCardData;
-import org.springframework.beans.factory.annotation.Autowired;
+import UmbertoAmoroso.PokeCardCollector.controllers.PokemonCardDTO;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Service
 public class PokemonCardService {
 
-    @Autowired
-    private ExternalCardService externalCardService;
+    @Value("${APICARD_URL}")
+    private String apiPokemonUrl;
 
-    public List<PokemonCardDTO> searchCardsByName(String name, boolean isHolo) {
-        String query = "name:" + name;
-        if (isHolo) {
-            query += " holo:true";
-        }
+    @Value("${APICARD_KEY}")
+    private String apiKey;
 
-        PokemonCardApiResponse response = externalCardService.searchCards(query);
+    private final RestTemplate restTemplate = new RestTemplate();
 
-        // Converti la lista di PokemonCardData in PokemonCardDTO
-        return response.getData().stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+    // Metodo per cercare carte Pokémon basato su una query
+    public List<PokemonCardDTO> searchPokemonCards(String query, int page, int pageSize) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("X-Api-Key", apiKey);  // Aggiunta dell'API key negli headers
+
+        String url = apiPokemonUrl + "/cards?q=" + query + "&page=" + page + "&pageSize=" + pageSize;
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<PokemonCardResponse> response = restTemplate.exchange(url, HttpMethod.GET, entity, PokemonCardResponse.class);
+
+        // Check for null response body and return empty list if necessary
+        return Optional.ofNullable(response.getBody())
+                .map(PokemonCardResponse::getData)
+                .orElse(List.of()); // Return an empty list if data is null
     }
 
-    // Metodo per convertire PokemonCardData in PokemonCardDTO
-    private PokemonCardDTO convertToDTO(PokemonCardData cardData) {
-        PokemonCardDTO cardDTO = new PokemonCardDTO();
-        cardDTO.setId(cardData.getId());
-        cardDTO.setName(cardData.getName());
-        cardDTO.setSupertype(cardData.getSupertype());
-        cardDTO.setSubtypes(cardData.getSubtypes());
-        cardDTO.setHp(cardData.getHp());
-        cardDTO.setTypes(cardData.getTypes());
-        cardDTO.setEvolvesTo(cardData.getEvolvesTo());
-        cardDTO.setRules(cardData.getRules());
-        cardDTO.setAttacks(cardData.getAttacks());
-        cardDTO.setWeaknesses(cardData.getWeaknesses());
-        cardDTO.setRetreatCost(cardData.getRetreatCost());
-        cardDTO.setConvertedRetreatCost(cardData.getConvertedRetreatCost());
-        cardDTO.setSet(cardData.getSet());
-        cardDTO.setNumber(cardData.getNumber());
-        cardDTO.setArtist(cardData.getArtist());
-        cardDTO.setRarity(cardData.getRarity());
-        cardDTO.setNationalPokedexNumbers(cardData.getNationalPokedexNumbers());
-        cardDTO.setLegalities(cardData.getLegalities());
-        cardDTO.setImages(cardData.getImages());
-        cardDTO.setTcgplayer(cardData.getTcgplayer());
-        return cardDTO;
+    // Metodo per ottenere i dettagli di una singola carta tramite ID
+    public Optional<PokemonCardDTO> getPokemonCardById(String cardId) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("X-Api-Key", apiKey);
+
+        String url = apiPokemonUrl + "/cards/" + cardId;
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<PokemonCardResponse> response = restTemplate.exchange(url, HttpMethod.GET, entity, PokemonCardResponse.class);
+
+        // Use Optional to safely retrieve the first card or empty if no result
+        return Optional.ofNullable(response.getBody())
+                .map(PokemonCardResponse::getData)
+                .stream()
+                .flatMap(List::stream)
+                .findFirst();  // Return the first card if available
+    }
+
+    // Classe di supporto per gestire la risposta JSON dell'API Pokémon
+    @Setter
+    @Getter
+    public static class PokemonCardResponse {
+        private List<PokemonCardDTO> data;
     }
 }

@@ -3,11 +3,12 @@ package UmbertoAmoroso.PokeCardCollector.dto;
 import lombok.Getter;
 import lombok.Setter;
 
-@Setter
-@Getter
-public class CardSet {
-    // Getters and Setters
-    private String id;
-    private String name;
+import java.util.List;
 
+@Getter
+@Setter
+public class CollectionDTO {
+    private Long id;
+    private String name;
+    private List<CardDTO> cards;
 }
