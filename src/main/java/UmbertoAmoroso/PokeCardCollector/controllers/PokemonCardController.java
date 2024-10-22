@@ -26,11 +26,46 @@ public class PokemonCardController {
         List<PokemonCardDTO> cards = pokemonCardService.searchPokemonCards(query, page, pageSize);
         return cards.stream()
                 .map(card -> {
-                    PokemonCardDTO minimalCard = new PokemonCardDTO();
-                    minimalCard.setId(card.getId());
-                    minimalCard.setName(card.getName());
-                    minimalCard.setImages(card.getImages());
-                    return minimalCard;
+                    PokemonCardDTO detailedCard = new PokemonCardDTO();
+                    detailedCard.setId(card.getId());
+                    detailedCard.setName(card.getName());
+                    detailedCard.setImages(card.getImages());
+                    detailedCard.setHp(card.getHp());
+                    detailedCard.setRarity(card.getRarity());
+                    detailedCard.setArtist(card.getArtist());
+
+                    // Aggiungi i tipi della carta
+                    detailedCard.setTypes(card.getTypes());
+
+                    // Aggiungi il set, se presente
+                    if (card.getSet() != null) {
+                        PokemonCardDTO.SetDetail setDetail = new PokemonCardDTO.SetDetail();
+                        setDetail.setId(card.getSet().getId());
+                        setDetail.setName(card.getSet().getName());
+                        setDetail.setSeries(card.getSet().getSeries());
+                        setDetail.setPrintedTotal(card.getSet().getPrintedTotal());
+                        setDetail.setReleaseDate(card.getSet().getReleaseDate());
+                        detailedCard.setSet(setDetail); // Assegna il set
+                    }
+
+                    // Aggiungi i prezzi di mercato, se disponibili
+                    if (card.getTcgplayer() != null && card.getTcgplayer().getPrices() != null) {
+                        PokemonCardDTO.TcgPlayer.Prices prices = card.getTcgplayer().getPrices();
+                        detailedCard.setTcgplayer(new PokemonCardDTO.TcgPlayer());
+                        detailedCard.getTcgplayer().setPrices(new PokemonCardDTO.TcgPlayer.Prices());
+
+                        if (prices.getNormal() != null) {
+                            detailedCard.getTcgplayer().getPrices().setNormal(prices.getNormal());
+                        }
+                        if (prices.getHolofoil() != null) {
+                            detailedCard.getTcgplayer().getPrices().setHolofoil(prices.getHolofoil());
+                        }
+                        if (prices.getReverseHolofoil() != null) {
+                            detailedCard.getTcgplayer().getPrices().setReverseHolofoil(prices.getReverseHolofoil());
+                        }
+                    }
+
+                    return detailedCard;
                 })
                 .collect(Collectors.toList());
     }
