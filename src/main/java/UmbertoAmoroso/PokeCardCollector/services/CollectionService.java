@@ -11,7 +11,9 @@ import UmbertoAmoroso.PokeCardCollector.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,11 +45,12 @@ public class CollectionService {
     public void addCardToCollection(Long collectionId, String cardId, String imageUrl) {
         Collection collection = collectionRepository.findById(collectionId)
                 .orElseThrow(() -> new IllegalArgumentException("Collection not found"));
+
         CollectionCard collectionCard = new CollectionCard();
-        collectionCard.setCardId(cardId);
-        collectionCard.setImageUrl(imageUrl);
-        collectionCard.setCollection(collection);
-        collectionCardRepository.save(collectionCard);
+        collectionCard.setCardId(cardId); // Usa l'ID della carta dall'API
+        collectionCard.setImageUrl(imageUrl); // Imposta l'URL dell'immagine
+        collectionCard.setCollection(collection); // Collega la carta alla collezione
+        collectionCardRepository.save(collectionCard); // Salva nel database
     }
 
     public void deleteCollection(Long collectionId) {
@@ -69,9 +72,19 @@ public class CollectionService {
         CollectionDTO dto = new CollectionDTO();
         dto.setId(collection.getId());
         dto.setName(collection.getName());
-        dto.setCards(collection.getCards().stream().map(this::mapCardToDTO).collect(Collectors.toList()));
+
+        // Gestione della lista delle carte, se è null viene impostata come lista vuota
+        dto.setCards(
+                Optional.ofNullable(collection.getCards())
+                        .orElse(Collections.emptyList())
+                        .stream()
+                        .map(this::mapCardToDTO)
+                        .collect(Collectors.toList())
+        );
+
         return dto;
     }
+
 
     private CardDTO mapCardToDTO(CollectionCard card) {
         CardDTO dto = new CardDTO();

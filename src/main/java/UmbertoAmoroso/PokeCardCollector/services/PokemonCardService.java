@@ -1,6 +1,6 @@
 package UmbertoAmoroso.PokeCardCollector.services;
 
-import UmbertoAmoroso.PokeCardCollector.controllers.PokemonCardDTO;
+import UmbertoAmoroso.PokeCardCollector.dto.PokemonCardDTO;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,10 +18,10 @@ import java.util.Optional;
 @Service
 public class PokemonCardService {
 
-    @Value("${APICARD_URL}")
+    @Value("${external.api.url}")
     private String apiPokemonUrl;
 
-    @Value("${APICARD_KEY}")
+    @Value("${external.api.key}")
     private String apiKey;
 
     private final RestTemplate restTemplate = new RestTemplate();

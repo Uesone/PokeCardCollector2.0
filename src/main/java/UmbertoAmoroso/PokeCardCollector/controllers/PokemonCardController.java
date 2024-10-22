@@ -1,5 +1,6 @@
 package UmbertoAmoroso.PokeCardCollector.controllers;
 
+import UmbertoAmoroso.PokeCardCollector.dto.PokemonCardDTO;
 import UmbertoAmoroso.PokeCardCollector.services.PokemonCardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;

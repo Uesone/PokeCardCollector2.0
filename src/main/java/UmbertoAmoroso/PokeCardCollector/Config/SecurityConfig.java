@@ -42,15 +42,12 @@ public class SecurityConfig {
                 }))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless session
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/register/admin").permitAll() // Permetti l'accesso libero alla registrazione admin
-                        .requestMatchers("/api/auth/**").permitAll()  // Permetti l'accesso agli endpoint di autenticazione
-                        .anyRequest().authenticated() // Richiedi autenticazione per tutto il resto
+                        .requestMatchers("/api/**").permitAll()  // Consenti l'accesso libero a tutte le API
                 )
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class); // Aggiungi JWT filter
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class); // Aggiungi JWT filter per le rotte protette
 
         return http.build();
     }
-
 
     @Bean
     public PasswordEncoder passwordEncoder() {

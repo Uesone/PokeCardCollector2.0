@@ -9,6 +9,6 @@ import java.util.List;
 @Setter
 public class CollectionDTO {
     private Long id;
-    private String name;
+    private String name;  // Campo per il nome della collezione
     private List<CardDTO> cards;
 }

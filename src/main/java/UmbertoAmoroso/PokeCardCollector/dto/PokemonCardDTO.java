@@ -1,4 +1,4 @@
-package UmbertoAmoroso.PokeCardCollector.controllers;
+package UmbertoAmoroso.PokeCardCollector.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;

@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/collections")
@@ -20,17 +21,21 @@ public class CollectionController {
     }
 
     @PostMapping("/user/{userId}")
-    public CollectionDTO createCollection(@PathVariable Long userId, @RequestParam String name) {
-        return collectionService.createCollection(userId, name);
+    public CollectionDTO createCollection(@PathVariable Long userId, @RequestBody CollectionDTO collectionDTO) {
+        return collectionService.createCollection(userId, collectionDTO.getName());
     }
+
 
     @PostMapping("/{collectionId}/addCard")
     public void addCardToCollection(
             @PathVariable Long collectionId,
-            @RequestParam String cardId,
-            @RequestParam String imageUrl) {
+            @RequestBody Map<String, String> cardData) { // Usa @RequestBody per accettare JSON nel body
+        String cardId = cardData.get("cardId");  // Ottieni cardId dal JSON
+        String imageUrl = cardData.get("imageUrl");  // Ottieni imageUrl dal JSON
+
         collectionService.addCardToCollection(collectionId, cardId, imageUrl);
     }
+
 
     @DeleteMapping("/{collectionId}")
     public void deleteCollection(@PathVariable Long collectionId) {
