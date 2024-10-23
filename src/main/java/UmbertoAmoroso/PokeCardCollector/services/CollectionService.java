@@ -7,7 +7,6 @@ import UmbertoAmoroso.PokeCardCollector.entities.CollectionCard;
 import UmbertoAmoroso.PokeCardCollector.entities.User;
 import UmbertoAmoroso.PokeCardCollector.repositories.CollectionCardRepository;
 import UmbertoAmoroso.PokeCardCollector.repositories.CollectionRepository;
-import UmbertoAmoroso.PokeCardCollector.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,41 +24,44 @@ public class CollectionService {
     @Autowired
     private CollectionCardRepository collectionCardRepository;
 
-    @Autowired
-    private UserRepository userRepository;
-
+    // Restituisce le collezioni di un utente
     public List<CollectionDTO> getUserCollections(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
-        return collectionRepository.findByUser(user).stream().map(this::mapToDTO).collect(Collectors.toList());
+        List<Collection> collections = collectionRepository.findByUser_Id(userId);
+        return collections.stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
+    // Crea una nuova collezione per l'utente autenticato
     public CollectionDTO createCollection(Long userId, String collectionName) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
         Collection collection = new Collection();
         collection.setName(collectionName);
-        collection.setUser(user);
+        collection.setUser(new User(userId));  // Associa l'utente alla collezione
         Collection savedCollection = collectionRepository.save(collection);
         return mapToDTO(savedCollection);
     }
 
-    public void addCardToCollection(Long collectionId, String cardId, String imageUrl) {
-        Collection collection = collectionRepository.findById(collectionId)
-                .orElseThrow(() -> new IllegalArgumentException("Collection not found"));
+    // Aggiunge una carta a una collezione specifica
+    public void addCardToCollection(Long userId, Long collectionId, String cardId, String imageUrl) {
+        Collection collection = collectionRepository.findByIdAndUser_Id(collectionId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("Collection not found for the user"));
 
         CollectionCard collectionCard = new CollectionCard();
-        collectionCard.setCardId(cardId); // Usa l'ID della carta dall'API
-        collectionCard.setImageUrl(imageUrl); // Imposta l'URL dell'immagine
-        collectionCard.setCollection(collection); // Collega la carta alla collezione
-        collectionCardRepository.save(collectionCard); // Salva nel database
+        collectionCard.setCardId(cardId);
+        collectionCard.setImageUrl(imageUrl);
+        collectionCard.setCollection(collection);
+        collectionCardRepository.save(collectionCard);
     }
 
-    public void deleteCollection(Long collectionId) {
-        collectionRepository.deleteById(collectionId);
+    // Elimina una collezione
+    public void deleteCollection(Long userId, Long collectionId) {
+        Collection collection = collectionRepository.findByIdAndUser_Id(collectionId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("Collection not found for the user"));
+        collectionRepository.delete(collection);
     }
 
-    public void deleteCardFromCollection(Long collectionId, String cardId) {
-        Collection collection = collectionRepository.findById(collectionId)
-                .orElseThrow(() -> new IllegalArgumentException("Collection not found"));
+    // Rimuove una carta da una collezione specifica
+    public void deleteCardFromCollection(Long userId, Long collectionId, String cardId) {
+        Collection collection = collectionRepository.findByIdAndUser_Id(collectionId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("Collection not found for the user"));
         List<CollectionCard> cards = collectionCardRepository.findByCollection(collection);
         CollectionCard cardToRemove = cards.stream()
                 .filter(card -> card.getCardId().equals(cardId))
@@ -68,12 +70,12 @@ public class CollectionService {
         collectionCardRepository.delete(cardToRemove);
     }
 
+    // Mappa Collection in CollectionDTO
     private CollectionDTO mapToDTO(Collection collection) {
         CollectionDTO dto = new CollectionDTO();
         dto.setId(collection.getId());
         dto.setName(collection.getName());
 
-        // Gestione della lista delle carte, se è null viene impostata come lista vuota
         dto.setCards(
                 Optional.ofNullable(collection.getCards())
                         .orElse(Collections.emptyList())
@@ -85,7 +87,7 @@ public class CollectionService {
         return dto;
     }
 
-
+    // Mappa CollectionCard in CardDTO
     private CardDTO mapCardToDTO(CollectionCard card) {
         CardDTO dto = new CardDTO();
         dto.setId(card.getId());

@@ -24,7 +24,7 @@ public class JwtUtil {
     public String generateToken(String username, String role) {
         return Jwts.builder()
                 .setSubject(username)
-                .claim("role", role) // Aggiungi il ruolo come claim
+                .claim("role", "ROLE_" + role)  // Aggiungi il prefisso ROLE_ qui
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationInMillis))
                 .signWith(getSigningKey())  // Usa il metodo per firmare il token

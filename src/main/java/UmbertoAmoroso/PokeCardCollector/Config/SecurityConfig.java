@@ -31,7 +31,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable) // Disable CSRF
+                .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(request -> {
                     var corsConfiguration = new org.springframework.web.cors.CorsConfiguration();
                     corsConfiguration.addAllowedOrigin("http://localhost:3000");
@@ -40,11 +40,13 @@ public class SecurityConfig {
                     corsConfiguration.setAllowCredentials(true);
                     return corsConfiguration;
                 }))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless session
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/**").permitAll()  // Consenti l'accesso libero a tutte le API
+                        .requestMatchers("/api/auth/**").permitAll()  // Consenti l'accesso alle rotte di autenticazione senza token
+                        .requestMatchers("/api/collections/**").hasAuthority("ROLE_USER") // Solo gli utenti autenticati con ruolo USER possono accedere alle collezioni
+                        .anyRequest().authenticated()  // Tutte le altre richieste richiedono autenticazione
                 )
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class); // Aggiungi JWT filter per le rotte protette
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

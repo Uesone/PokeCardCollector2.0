@@ -39,6 +39,11 @@ public class User implements UserDetails {
         USER, ADMIN
     }
 
+    // Aggiungi un costruttore che accetta l'ID
+    public User(Long id) {
+        this.id = id;
+    }
+
     // Implementazione dei metodi di UserDetails
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
