@@ -82,3 +82,5 @@ PokeCardCollector2.0/
 
 📄 License
 This project is open source.
+
+Made with ☕ by Umberto Amoroso
