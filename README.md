@@ -80,7 +80,8 @@ PokeCardCollector2.0/
 ├── pom.xml
 └── ...
 
-📄 License
+```
+📄 License  
 This project is open source.
-
+---
 Made with ☕ by Umberto Amoroso
